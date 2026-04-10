@@ -10,6 +10,7 @@
             --bg: #f8fafc;
             --line: #cbd5e1;
             --text: #1e293b;
+            --accent: #10b981;
         }
 
         body {
@@ -17,10 +18,8 @@
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            overflow-x: auto;
             display: flex;
             flex-direction: column;
-            align-items: center;
         }
 
         /* Top Navigation */
@@ -39,11 +38,11 @@
 
         .search-container { position: relative; width: 250px; }
 
-        input, select {
-            padding: 10px;
+        input {
+            padding: 12px;
             border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 10px;
+            font-size: 16px;
             width: 100%;
             box-sizing: border-box;
         }
@@ -55,39 +54,42 @@
             right: 0;
             background: white;
             border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            max-height: 200px;
+            border-radius: 10px;
+            max-height: 250px;
             overflow-y: auto;
             display: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
         }
 
-        .dropdown-item {
-            padding: 10px;
-            cursor: pointer;
-        }
-
-        .dropdown-item:hover { background: var(--bg); }
+        .dropdown-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
+        .dropdown-item:hover { background: var(--bg); color: var(--primary); }
 
         .btn-clear {
             background: #ef4444;
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: bold;
         }
 
         /* Canvas & Mindmap Layout */
+        #map-wrapper {
+            position: relative;
+            overflow: auto;
+            flex-grow: 1;
+            padding: 40px;
+        }
+
         #map-container {
             position: relative;
             display: flex;
             flex-direction: row;
             align-items: flex-start;
-            padding: 50px;
-            gap: 80px;
-            min-height: 80vh;
+            gap: 100px;
+            min-height: 500px;
+            width: max-content;
         }
 
         .column {
@@ -99,60 +101,71 @@
 
         /* Table Card Styles */
         .table-card {
-            width: 300px;
+            width: 320px;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             border: 1px solid #e2e8f0;
             overflow: hidden;
-            animation: fadeIn 0.4s ease-out;
+            animation: slideIn 0.3s ease-out;
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideIn { 
+            from { opacity: 0; transform: translateX(-30px); } 
+            to { opacity: 1; transform: translateX(0); } 
+        }
 
         .card-header {
             background: var(--primary);
             color: white;
-            padding: 12px;
-            font-weight: bold;
+            padding: 14px;
+            font-weight: 800;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .card-content { padding: 0; }
-
         .row {
             display: flex;
-            padding: 8px 12px;
+            padding: 10px 14px;
             border-bottom: 1px solid #f1f5f9;
-            font-size: 13px;
-            transition: background 0.2s;
+            font-size: 14px;
+            transition: all 0.2s;
+            position: relative;
         }
 
         .row.highlight {
-            background: #e0e7ff;
-            font-weight: bold;
-            color: var(--primary);
+            background: #eef2ff;
+            border-left: 4px solid var(--primary);
+            font-weight: 600;
         }
 
-        .col-roll { width: 40px; font-weight: bold; color: #64748b; }
-        .col-text { flex: 1; }
+        .next-indicator {
+            position: absolute;
+            right: 10px;
+            font-size: 10px;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
 
-        .roll-btn-container { padding: 15px; }
+        .col-roll { width: 35px; color: #94a3b8; font-family: monospace; }
+        .col-text { flex: 1; padding-right: 20px; }
+
+        .roll-btn-container { padding: 16px; background: #fafafa; }
         .roll-btn {
             width: 100%;
             background: var(--primary);
             color: white;
             border: none;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 10px;
             cursor: pointer;
-            font-weight: 800;
-            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);
         }
 
-        .roll-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .roll-btn:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
 
         /* SVG Connections */
         #svg-canvas {
@@ -165,61 +178,87 @@
             z-index: 1;
         }
 
-        line { stroke: var(--line); stroke-width: 2; }
+        line { stroke: var(--line); stroke-width: 3; stroke-linecap: round; }
     </style>
 </head>
 <body>
 
 <div class="toolbar">
     <div class="search-container">
-        <input type="text" id="tableSearch" placeholder="Type starting table..." oninput="filterTables()">
+        <input type="text" id="tableSearch" placeholder="Search tables..." oninput="filterTables()" autocomplete="off">
         <div id="dropdown" class="dropdown-list"></div>
     </div>
-    <button class="btn-clear" onclick="clearAll()">Clear Tables</button>
+    <button class="btn-clear" onclick="clearAll()">Clear Canvas</button>
 </div>
 
-<div id="map-container">
-    <svg id="svg-canvas"></svg>
-    </div>
+<div id="map-wrapper">
+    <div id="map-container">
+        <svg id="svg-canvas"></svg>
+        </div>
+</div>
 
 <script>
-    // --- SAMPLE DATASET ---
+    // --- DATABASE ---
     const rollTables = {
-        "Encounter Type": {
-            name: "Encounter Type",
+        "Dungeon Entrance": {
+            name: "Dungeon Entrance",
             rollType: "1d6",
             rows: [
-                { val: 1, text: "Combat: A group of goblins", next: "Goblin Loot" },
-                { val: 2, text: "Combat: A lone troll", next: "Troll Treasure" },
-                { val: 3, text: "Social: A traveling merchant", next: "Merchant Wares" },
-                { val: 4, text: "Social: A wounded knight", next: "Knight Reward" },
-                { val: 5, text: "Trap: Hidden Pitfall", next: "Trap Damage" },
-                { val: 6, text: "Mystery: A glowing shrine", next: "Shrine Blessing" }
+                { val: 1, text: "Iron Portcullis (Locked)", next: "Trap Table" },
+                { val: 2, text: "Cave-in: Blocked Path", next: "Skill Check" },
+                { val: 3, text: "Grumbling Goblins", next: "Combat: Goblins" },
+                { val: 4, text: "A Mysterious Statue", next: "Statue Interaction" },
+                { val: 5, text: "Hidden Doorway", next: "Treasure Room" },
+                { val: 6, text: "Fresh Tracks", next: "Tracking Result" }
             ]
         },
-        "Goblin Loot": {
-            name: "Goblin Loot",
-            rollType: "2d6",
-            rows: [
-                { val: 2, text: "Nothing but lint" },
-                { val: 7, text: "15 Gold pieces" },
-                { val: 12, text: "A rusted key", next: "Ancient Chest" }
-            ]
-        },
-        "Merchant Wares": {
-            name: "Merchant Wares",
+        "Trap Table": {
+            name: "Trap Table",
             rollType: "1d4",
             rows: [
-                { val: 1, text: "Health Potion (50g)" },
-                { val: 2, text: "Iron Sword (100g)" },
-                { val: 3, text: "Map to Ruins", next: "Mystery: A glowing shrine" },
-                { val: 4, text: "Cursed Ring" }
+                { val: 1, text: "Poison Needle (1d4 Dmg)" },
+                { val: 2, text: "Falling Rocks", next: "Skill Check" },
+                { val: 3, text: "Alarm Sounds", next: "Combat: Goblins" },
+                { val: 4, text: "Nothing happens" }
+            ]
+        },
+        "Combat: Goblins": {
+            name: "Combat: Goblins",
+            rollType: "2d6",
+            rows: [
+                { val: 2, text: "Critical Defeat", next: "Death Table" },
+                { val: 7, text: "Victory: Messy", next: "Loot Table" },
+                { val: 12, text: "Victory: Flawless", next: "Loot Table" }
+            ]
+        },
+        "Loot Table": {
+            name: "Loot Table",
+            rollType: "1d6",
+            rows: [
+                { val: 1, text: "Broken Sword" },
+                { val: 3, text: "10 Gold Coins" },
+                { val: 6, text: "Magic Scroll", next: "Statue Interaction" }
+            ]
+        },
+        "Skill Check": {
+            name: "Skill Check",
+            rollType: "1d20",
+            rows: [
+                { val: 1, text: "Epic Fail", next: "Trap Table" },
+                { val: 10, text: "Barely Success", next: "Dungeon Entrance" },
+                { val: 20, text: "Perfect Success", next: "Treasure Room" }
+            ]
+        },
+        "Treasure Room": {
+            name: "Treasure Room",
+            rollType: "1d100",
+            rows: [
+                { val: 1, text: "Mimic!" },
+                { val: 50, text: "Pile of Silver" },
+                { val: 100, text: "Ancient Artifact" }
             ]
         }
-        // Add more tables here as needed
     };
-
-    let activePath = []; // Stores the IDs of tables currently visible
 
     function filterTables() {
         const input = document.getElementById('tableSearch');
@@ -230,7 +269,6 @@
         if (!filter) { list.style.display = 'none'; return; }
 
         const matches = Object.keys(rollTables).filter(key => key.toLowerCase().includes(filter));
-        
         matches.forEach(name => {
             const div = document.createElement('div');
             div.className = 'dropdown-item';
@@ -238,7 +276,6 @@
             div.onclick = () => selectStartTable(name);
             list.appendChild(div);
         });
-
         list.style.display = matches.length ? 'block' : 'none';
     }
 
@@ -249,29 +286,30 @@
         addTableToUI(name, 0);
     }
 
-    function addTableToUI(tableName, depth, parentElementId = null) {
+    function addTableToUI(tableName, depth, parentCardId = null) {
         const tableData = rollTables[tableName];
         if (!tableData) return;
 
-        // Create column if it doesn't exist
         let container = document.getElementById('map-container');
         let columns = container.getElementsByClassName('column');
-        if (columns.length <= depth) {
+        
+        // Ensure column exists
+        while (columns.length <= depth) {
             const newCol = document.createElement('div');
             newCol.className = 'column';
             container.appendChild(newCol);
-            columns = container.getElementsByClassName('column');
         }
 
-        const cardId = `card-${depth}-${Date.now()}`;
+        const cardId = `card-${depth}-${Math.random().toString(36).substr(2, 9)}`;
         const card = document.createElement('div');
         card.className = 'table-card';
         card.id = cardId;
         
-        let rowsHtml = tableData.rows.map(r => `
-            <div class="row" data-val="${r.val}">
+        const rowsHtml = tableData.rows.map(r => `
+            <div class="row" data-val="${r.val}" data-next="${r.next || ''}">
                 <div class="col-roll">${r.val}</div>
                 <div class="col-text">${r.text}</div>
+                ${r.next ? '<span class="next-indicator">➔</span>' : ''}
             </div>
         `).join('');
 
@@ -289,33 +327,36 @@
         `;
 
         columns[depth].appendChild(card);
-        if (parentElementId) drawLine(parentElementId, cardId);
+        
+        // Connect with line after card is placed
+        if (parentCardId) {
+            setTimeout(() => drawLine(parentCardId, cardId), 50);
+        }
     }
 
     function roll(tableName, cardId, depth) {
         const tableData = rollTables[tableName];
         const [num, sides] = tableData.rollType.split('d').map(Number);
         
-        // Simulate Roll
         let result = 0;
         for(let i=0; i<num; i++) result += Math.floor(Math.random() * sides) + 1;
 
-        // Find result in table (handle range or closest match)
-        const rows = tableData.rows;
-        let matchedRow = rows.find(r => r.val === result) || rows[rows.length-1];
-
-        // UI Update: Highlight row
         const card = document.getElementById(cardId);
-        card.querySelectorAll('.row').forEach(r => r.classList.remove('highlight'));
-        const rowElements = card.querySelectorAll('.row');
-        rowElements.forEach(el => {
+        const rowEls = Array.from(card.querySelectorAll('.row'));
+        
+        // Find the best match (closest value without going over, or exact)
+        let matchedRow = tableData.rows.find(r => r.val === result) || 
+                         tableData.rows.reduce((prev, curr) => (Math.abs(curr.val - result) < Math.abs(prev.val - result) ? curr : prev));
+
+        // UI Update
+        rowEls.forEach(el => {
+            el.classList.remove('highlight');
             if(parseInt(el.dataset.val) === matchedRow.val) el.classList.add('highlight');
         });
 
-        // Disable button
         card.querySelector('.roll-btn').disabled = true;
 
-        // Next Table Logic
+        // Trigger next table
         if (matchedRow.next) {
             addTableToUI(matchedRow.next, depth + 1, cardId);
         }
@@ -325,15 +366,16 @@
         const start = document.getElementById(startId);
         const end = document.getElementById(endId);
         const svg = document.getElementById('svg-canvas');
+        const container = document.getElementById('map-container');
 
-        const rect1 = start.getBoundingClientRect();
-        const rect2 = end.getBoundingClientRect();
-        const containerRect = document.getElementById('map-container').getBoundingClientRect();
+        const sRect = start.getBoundingClientRect();
+        const eRect = end.getBoundingClientRect();
+        const cRect = container.getBoundingClientRect();
 
-        const x1 = rect1.right - containerRect.left;
-        const y1 = rect1.top + (rect1.height / 2) - containerRect.top;
-        const x2 = rect2.left - containerRect.left;
-        const y2 = rect2.top + (rect2.height / 2) - containerRect.top;
+        const x1 = sRect.right - cRect.left;
+        const y1 = sRect.top + (sRect.height / 2) - cRect.top;
+        const x2 = eRect.left - cRect.left;
+        const y2 = eRect.top + (eRect.height / 2) - cRect.top;
 
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line.setAttribute("x1", x1);
@@ -344,16 +386,10 @@
     }
 
     function clearAll() {
-        document.getElementById('map-container').innerHTML = '<svg id="svg-canvas"></svg>';
+        const container = document.getElementById('map-container');
+        container.innerHTML = '<svg id="svg-canvas"></svg>';
         document.getElementById('tableSearch').value = '';
     }
-
-    // Adjust lines on resize
-    window.addEventListener('resize', () => {
-        // Simple way: clear and let user re-roll or just clear lines. 
-        // For this simple version, clearing is safest.
-    });
-
 </script>
 
 </body>
