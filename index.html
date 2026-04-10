@@ -165,11 +165,133 @@
     box-shadow: 0 0 12px rgba(139,32,32,0.2);
   }
 
+  /* ── Body layout ── */
+  .body-layout {
+    display: flex;
+    align-items: flex-start;
+    min-height: calc(100vh - 58px);
+  }
+
+  /* ── Log Panel ── */
+  .log-panel {
+    width: 220px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 58px;
+    height: calc(100vh - 58px);
+    overflow-y: auto;
+    border-right: 1px solid rgba(200,149,42,0.18);
+    background: rgba(15,13,9,0.7);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px 10px;
+    border-bottom: 1px solid rgba(200,149,42,0.15);
+    position: sticky;
+    top: 0;
+    background: rgba(15,13,9,0.95);
+    z-index: 2;
+    flex-shrink: 0;
+  }
+
+  .log-title {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+  }
+
+  .log-clear-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    padding: 3px 8px;
+    background: transparent;
+    border: 1px solid rgba(139,32,32,0.4);
+    border-radius: 4px;
+    color: rgba(193,48,48,0.7);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .log-clear-btn:hover {
+    background: rgba(139,32,32,0.12);
+    border-color: var(--crimson-light);
+    color: var(--crimson-light);
+  }
+
+  .log-entries {
+    flex: 1;
+    padding: 10px 0;
+    overflow-y: auto;
+  }
+
+  .log-empty {
+    font-family: 'Crimson Pro', serif;
+    font-size: 12px;
+    font-style: italic;
+    color: var(--stone);
+    text-align: center;
+    padding: 24px 14px;
+    opacity: 0.7;
+  }
+
+  .log-entry {
+    padding: 8px 14px;
+    border-bottom: 1px solid rgba(200,149,42,0.07);
+    animation: log-slide-in 0.28s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .log-entry:last-child { border-bottom: none; }
+  @keyframes log-slide-in {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .log-entry-table {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    color: var(--gold-dim);
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .log-entry-roll {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gold);
+    background: rgba(200,149,42,0.1);
+    border: 1px solid rgba(200,149,42,0.2);
+    border-radius: 3px;
+    padding: 0px 5px;
+    margin-bottom: 4px;
+    line-height: 1.6;
+  }
+
+  .log-entry-flavor {
+    font-family: 'Crimson Pro', serif;
+    font-size: 12px;
+    font-style: italic;
+    color: rgba(240,232,210,0.75);
+    line-height: 1.4;
+  }
+
   /* ── Canvas ── */
   #canvas {
+    flex: 1;
     padding: 36px 24px 80px;
     overflow-x: auto;
-    min-height: calc(100vh - 60px);
+    min-height: calc(100vh - 58px);
   }
 
   .empty-state {
@@ -553,8 +675,8 @@
   .dice-roller input[type="number"] {
     font-family: 'Cinzel', serif;
     font-size: 13px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(200,149,42,0.25);
+    background: #2a2318;
+    border: 1px solid rgba(200,149,42,0.45);
     border-radius: 4px;
     color: var(--gold-light);
     outline: none;
@@ -682,23 +804,39 @@
   </div>
 </header>
 
-<!-- Main canvas -->
-<div id="canvas">
-  <div class="empty-state" id="empty-state">
-    <div class="rune">&#9670;</div>
-    <p>Search for a table above to begin your fate</p>
+<!-- Main layout -->
+<div class="body-layout">
+
+  <!-- Log Panel -->
+  <aside class="log-panel" id="log-panel">
+    <div class="log-header">
+      <span class="log-title">Roll Log</span>
+      <button class="log-clear-btn" onclick="clearLog()">Clear</button>
+    </div>
+    <div class="log-entries" id="log-entries">
+      <div class="log-empty" id="log-empty">No rolls yet</div>
+    </div>
+  </aside>
+
+  <!-- Main canvas -->
+  <div id="canvas">
+    <div class="empty-state" id="empty-state">
+      <div class="rune">&#9670;</div>
+      <p>Search for a table above to begin your fate</p>
+    </div>
+
+    <div id="flow" style="display:none;">
+      <svg id="svg-connectors" aria-hidden="true">
+        <defs>
+          <linearGradient id="connGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#c8952a" stop-opacity="0.7"/>
+            <stop offset="100%" stop-color="#c8952a" stop-opacity="0.2"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
   </div>
 
-  <div id="flow" style="display:none;">
-    <svg id="svg-connectors" aria-hidden="true">
-      <defs>
-        <linearGradient id="connGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#c8952a" stop-opacity="0.7"/>
-          <stop offset="100%" stop-color="#c8952a" stop-opacity="0.2"/>
-        </linearGradient>
-      </defs>
-    </svg>
-  </div>
 </div>
 
 <script>
@@ -924,7 +1062,7 @@ function selectTable(name) {
 }
 
 /* ──────────────────────────────────────────────
-   ADD CARD
+   ADD CARD (single card — replaces previous)
 ────────────────────────────────────────────── */
 function addCard(tableName, depth) {
   const table = TABLES[tableName];
@@ -932,16 +1070,13 @@ function addCard(tableName, depth) {
 
   const flow = document.getElementById('flow');
 
+  // Remove all existing cards — show only one at a time
+  flow.querySelectorAll('.table-row-wrap').forEach(r => r.remove());
+  flow.querySelectorAll('path.connector-path').forEach(p => p.remove());
+
   const rowWrap = document.createElement('div');
   rowWrap.className = 'table-row-wrap';
-  rowWrap.setAttribute('data-depth', Math.min(depth, 4));
-
-  // Node dot for depth > 0
-  if (depth > 0) {
-    const dot = document.createElement('div');
-    dot.className = 'node-dot';
-    rowWrap.appendChild(dot);
-  }
+  rowWrap.setAttribute('data-depth', '0');
 
   const card = document.createElement('div');
   card.className = 'card active-roll card-animate';
@@ -995,14 +1130,6 @@ function addCard(tableName, depth) {
   });
 
   tableChain.push({ tableName, cardEl: card, result: null, depth });
-
-  // Draw connector from previous card
-  if (tableChain.length > 1) {
-    setTimeout(() => drawConnector(tableChain.length - 2, tableChain.length - 1), 80);
-  }
-
-  // Scroll into view
-  setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
 }
 
 /* ──────────────────────────────────────────────
@@ -1051,12 +1178,9 @@ function resolveRoll(card, rollVal) {
   // Highlight row
   card.querySelectorAll('.die-table tr').forEach(r => r.classList.remove('rolled'));
   const targetRow = card.querySelector(`.die-table tr[data-roll="${entry.roll}"]`);
-  if (targetRow) {
-    targetRow.classList.add('rolled');
-    targetRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }
+  if (targetRow) targetRow.classList.add('rolled');
 
-  // Show result summary
+  // Show result summary on card
   const resultArea = card.querySelector('.result-area');
   resultArea.innerHTML = `
     <div class="rolled-result">
@@ -1072,7 +1196,6 @@ function resolveRoll(card, rollVal) {
   rollBtn.disabled = true;
   rollBtn.style.opacity = '0.4';
   rollBtn.style.cursor = 'not-allowed';
-
   const manualArea = card.querySelector('.manual-roll-area');
   if (manualArea) {
     manualArea.querySelectorAll('input,button').forEach(el => {
@@ -1082,30 +1205,16 @@ function resolveRoll(card, rollVal) {
     });
   }
 
-  // Mark card done
   card.classList.remove('active-roll');
   card.classList.add('done');
 
-  // Determine next table
+  // Log this result
+  addLogEntry(card._tableName, rollVal, entry.flavor);
+
+  // Chain to next table or stay idle
   const nextName = table.next?.[rollVal];
   if (nextName && TABLES[nextName]) {
-    const hint = document.createElement('div');
-    hint.className = 'next-hint';
-    hint.innerHTML = `<span class="arrow">&#8594;</span> Chains to: <strong style="color:var(--gold-dim)">${nextName}</strong>`;
-    card.appendChild(hint);
-
-    const chainItem = tableChain.find(c => c.cardEl === card);
-    if (chainItem) chainItem.result = rollVal;
-
-    setTimeout(() => addCard(nextName, depth + 1), 380);
-  } else {
-    const chainItem = tableChain.find(c => c.cardEl === card);
-    if (chainItem) chainItem.result = rollVal;
-
-    const endHint = document.createElement('div');
-    endHint.className = 'next-hint';
-    endHint.innerHTML = `<span style="color:var(--emerald-light)">&#10003;</span> End of chain — press Clear to reset`;
-    card.appendChild(endHint);
+    setTimeout(() => addCard(nextName, depth + 1), 420);
   }
 }
 
@@ -1202,6 +1311,31 @@ function clearAll(showEmpty = true) {
 }
 
 /* ──────────────────────────────────────────────
+   ROLL LOG
+────────────────────────────────────────────── */
+function addLogEntry(tableName, rollVal, flavor) {
+  const entries = document.getElementById('log-entries');
+  const empty   = document.getElementById('log-empty');
+  if (empty) empty.remove();
+
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `
+    <div class="log-entry-table">${tableName}</div>
+    <span class="log-entry-roll">${rollVal}</span>
+    <div class="log-entry-flavor">${flavor}</div>
+  `;
+  entries.appendChild(entry);
+  // Scroll to bottom of log
+  entries.scrollTop = entries.scrollHeight;
+}
+
+function clearLog() {
+  const entries = document.getElementById('log-entries');
+  entries.innerHTML = '<div class="log-empty" id="log-empty">No rolls yet</div>';
+}
+
+/* ──────────────────────────────────────────────
    DICE ROLLER WIDGET
 ────────────────────────────────────────────── */
 function diceRollerRoll() {
@@ -1222,6 +1356,18 @@ function diceRollerRoll() {
   const sumLabel = count > 1 ? `<span class="dr-sum">= ${sum}</span>` : '';
   el.innerHTML = pips + sumLabel;
 }
+
+// Set log panel top to actual header height
+(function() {
+  function syncLogTop() {
+    const h = document.querySelector('.header').getBoundingClientRect().height;
+    document.querySelector('.log-panel').style.top = h + 'px';
+    document.querySelector('.log-panel').style.height = `calc(100vh - ${h}px)`;
+    document.querySelector('.body-layout').style.minHeight = `calc(100vh - ${h}px)`;
+  }
+  syncLogTop();
+  window.addEventListener('resize', syncLogTop);
+})();
 
 // Also allow Enter on the count input
 document.getElementById('dr-count').addEventListener('keydown', e => {
