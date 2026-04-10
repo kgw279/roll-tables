@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindmap Roll Table</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg: #f8fafc;
+            --line: #cbd5e1;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            overflow-x: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Top Navigation */
+        .toolbar {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            background: white;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .search-container { position: relative; width: 250px; }
+
+        input, select {
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .dropdown-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover { background: var(--bg); }
+
+        .btn-clear {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Canvas & Mindmap Layout */
+        #map-container {
+            position: relative;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            padding: 50px;
+            gap: 80px;
+            min-height: 80vh;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            z-index: 10;
+        }
+
+        /* Table Card Styles */
+        .table-card {
+            width: 300px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+        .card-header {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-content { padding: 0; }
+
+        .row {
+            display: flex;
+            padding: 8px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .row.highlight {
+            background: #e0e7ff;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .col-roll { width: 40px; font-weight: bold; color: #64748b; }
+        .col-text { flex: 1; }
+
+        .roll-btn-container { padding: 15px; }
+        .roll-btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .roll-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        /* SVG Connections */
+        #svg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        line { stroke: var(--line); stroke-width: 2; }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <div class="search-container">
+        <input type="text" id="tableSearch" placeholder="Type starting table..." oninput="filterTables()">
+        <div id="dropdown" class="dropdown-list"></div>
+    </div>
+    <button class="btn-clear" onclick="clearAll()">Clear Tables</button>
+</div>
+
+<div id="map-container">
+    <svg id="svg-canvas"></svg>
+    </div>
+
+<script>
+    // --- SAMPLE DATASET ---
+    const rollTables = {
+        "Encounter Type": {
+            name: "Encounter Type",
+            rollType: "1d6",
+            rows: [
+                { val: 1, text: "Combat: A group of goblins", next: "Goblin Loot" },
+                { val: 2, text: "Combat: A lone troll", next: "Troll Treasure" },
+                { val: 3, text: "Social: A traveling merchant", next: "Merchant Wares" },
+                { val: 4, text: "Social: A wounded knight", next: "Knight Reward" },
+                { val: 5, text: "Trap: Hidden Pitfall", next: "Trap Damage" },
+                { val: 6, text: "Mystery: A glowing shrine", next: "Shrine Blessing" }
+            ]
+        },
+        "Goblin Loot": {
+            name: "Goblin Loot",
+            rollType: "2d6",
+            rows: [
+                { val: 2, text: "Nothing but lint" },
+                { val: 7, text: "15 Gold pieces" },
+                { val: 12, text: "A rusted key", next: "Ancient Chest" }
+            ]
+        },
+        "Merchant Wares": {
+            name: "Merchant Wares",
+            rollType: "1d4",
+            rows: [
+                { val: 1, text: "Health Potion (50g)" },
+                { val: 2, text: "Iron Sword (100g)" },
+                { val: 3, text: "Map to Ruins", next: "Mystery: A glowing shrine" },
+                { val: 4, text: "Cursed Ring" }
+            ]
+        }
+        // Add more tables here as needed
+    };
+
+    let activePath = []; // Stores the IDs of tables currently visible
+
+    function filterTables() {
+        const input = document.getElementById('tableSearch');
+        const list = document.getElementById('dropdown');
+        const filter = input.value.toLowerCase();
+        
+        list.innerHTML = '';
+        if (!filter) { list.style.display = 'none'; return; }
+
+        const matches = Object.keys(rollTables).filter(key => key.toLowerCase().includes(filter));
+        
+        matches.forEach(name => {
+            const div = document.createElement('div');
+            div.className = 'dropdown-item';
+            div.innerText = name;
+            div.onclick = () => selectStartTable(name);
+            list.appendChild(div);
+        });
+
+        list.style.display = matches.length ? 'block' : 'none';
+    }
+
+    function selectStartTable(name) {
+        clearAll();
+        document.getElementById('dropdown').style.display = 'none';
+        document.getElementById('tableSearch').value = name;
+        addTableToUI(name, 0);
+    }
+
+    function addTableToUI(tableName, depth, parentElementId = null) {
+        const tableData = rollTables[tableName];
+        if (!tableData) return;
+
+        // Create column if it doesn't exist
+        let container = document.getElementById('map-container');
+        let columns = container.getElementsByClassName('column');
+        if (columns.length <= depth) {
+            const newCol = document.createElement('div');
+            newCol.className = 'column';
+            container.appendChild(newCol);
+            columns = container.getElementsByClassName('column');
+        }
+
+        const cardId = `card-${depth}-${Date.now()}`;
+        const card = document.createElement('div');
+        card.className = 'table-card';
+        card.id = cardId;
+        
+        let rowsHtml = tableData.rows.map(r => `
+            <div class="row" data-val="${r.val}">
+                <div class="col-roll">${r.val}</div>
+                <div class="col-text">${r.text}</div>
+            </div>
+        `).join('');
+
+        card.innerHTML = `
+            <div class="card-header">
+                <span>${tableData.name}</span>
+                <small>${tableData.rollType}</small>
+            </div>
+            <div class="card-content">${rowsHtml}</div>
+            <div class="roll-btn-container">
+                <button class="roll-btn" onclick="roll('${tableName}', '${cardId}', ${depth})">
+                    Roll ${tableData.rollType}
+                </button>
+            </div>
+        `;
+
+        columns[depth].appendChild(card);
+        if (parentElementId) drawLine(parentElementId, cardId);
+    }
+
+    function roll(tableName, cardId, depth) {
+        const tableData = rollTables[tableName];
+        const [num, sides] = tableData.rollType.split('d').map(Number);
+        
+        // Simulate Roll
+        let result = 0;
+        for(let i=0; i<num; i++) result += Math.floor(Math.random() * sides) + 1;
+
+        // Find result in table (handle range or closest match)
+        const rows = tableData.rows;
+        let matchedRow = rows.find(r => r.val === result) || rows[rows.length-1];
+
+        // UI Update: Highlight row
+        const card = document.getElementById(cardId);
+        card.querySelectorAll('.row').forEach(r => r.classList.remove('highlight'));
+        const rowElements = card.querySelectorAll('.row');
+        rowElements.forEach(el => {
+            if(parseInt(el.dataset.val) === matchedRow.val) el.classList.add('highlight');
+        });
+
+        // Disable button
+        card.querySelector('.roll-btn').disabled = true;
+
+        // Next Table Logic
+        if (matchedRow.next) {
+            addTableToUI(matchedRow.next, depth + 1, cardId);
+        }
+    }
+
+    function drawLine(startId, endId) {
+        const start = document.getElementById(startId);
+        const end = document.getElementById(endId);
+        const svg = document.getElementById('svg-canvas');
+
+        const rect1 = start.getBoundingClientRect();
+        const rect2 = end.getBoundingClientRect();
+        const containerRect = document.getElementById('map-container').getBoundingClientRect();
+
+        const x1 = rect1.right - containerRect.left;
+        const y1 = rect1.top + (rect1.height / 2) - containerRect.top;
+        const x2 = rect2.left - containerRect.left;
+        const y2 = rect2.top + (rect2.height / 2) - containerRect.top;
+
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+        svg.appendChild(line);
+    }
+
+    function clearAll() {
+        document.getElementById('map-container').innerHTML = '<svg id="svg-canvas"></svg>';
+        document.getElementById('tableSearch').value = '';
+    }
+
+    // Adjust lines on resize
+    window.addEventListener('resize', () => {
+        // Simple way: clear and let user re-roll or just clear lines. 
+        // For this simple version, clearing is safest.
+    });
+
+</script>
+
+</body>
+</html>
