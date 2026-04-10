@@ -1,396 +1,927 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mindmap Roll Table</title>
-    <style>
-        :root {
-            --primary: #6366f1;
-            --bg: #f8fafc;
-            --line: #cbd5e1;
-            --text: #1e293b;
-            --accent: #10b981;
-        }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Roll Table Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --ink: #1a1610;
+    --parchment: #f5efe0;
+    --parchment-dark: #ede4cc;
+    --parchment-mid: #f0e8d2;
+    --gold: #c8952a;
+    --gold-light: #e8b84b;
+    --gold-dim: #a07820;
+    --crimson: #8b2020;
+    --crimson-light: #c13030;
+    --emerald: #1a5c3a;
+    --emerald-light: #2a7c52;
+    --stone: #6b5e4e;
+    --stone-light: #8a7a6a;
+    --shadow: rgba(26,22,16,0.18);
+    --glow: rgba(200,149,42,0.22);
+  }
 
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-        }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* Top Navigation */
-        .toolbar {
-            position: sticky;
-            top: 0;
-            width: 100%;
-            background: white;
-            padding: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            z-index: 100;
-        }
+  body {
+    font-family: 'Crimson Pro', Georgia, serif;
+    background: var(--ink);
+    color: var(--parchment);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% 0%, #2d2518 0%, transparent 70%),
+      repeating-linear-gradient(0deg, transparent, transparent 48px, rgba(200,149,42,0.03) 49px),
+      repeating-linear-gradient(90deg, transparent, transparent 48px, rgba(200,149,42,0.03) 49px);
+  }
 
-        .search-container { position: relative; width: 250px; }
+  /* ── Header ── */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: linear-gradient(180deg, #0f0d09 0%, rgba(15,13,9,0.97) 100%);
+    border-bottom: 1px solid rgba(200,149,42,0.3);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    backdrop-filter: blur(8px);
+  }
 
-        input {
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 16px;
-            width: 100%;
-            box-sizing: border-box;
-        }
+  .header-title {
+    font-family: 'Cinzel', serif;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(200,149,42,0.5);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
 
-        .dropdown-list {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            max-height: 250px;
-            overflow-y: auto;
-            display: none;
-            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
-        }
+  .header-title span {
+    color: var(--gold-light);
+  }
 
-        .dropdown-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
-        .dropdown-item:hover { background: var(--bg); color: var(--primary); }
+  .search-container {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    max-width: 340px;
+  }
 
-        .btn-clear {
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--stone-light);
+    font-size: 13px;
+    pointer-events: none;
+  }
 
-        /* Canvas & Mindmap Layout */
-        #map-wrapper {
-            position: relative;
-            overflow: auto;
-            flex-grow: 1;
-            padding: 40px;
-        }
+  #search-input {
+    width: 100%;
+    font-family: 'Crimson Pro', serif;
+    font-size: 15px;
+    padding: 9px 12px 9px 34px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(200,149,42,0.25);
+    border-radius: 6px;
+    color: var(--parchment);
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  #search-input::placeholder { color: var(--stone-light); font-style: italic; }
+  #search-input:focus {
+    border-color: rgba(200,149,42,0.6);
+    background: rgba(255,255,255,0.09);
+    box-shadow: 0 0 0 3px rgba(200,149,42,0.1);
+  }
 
-        #map-container {
-            position: relative;
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-            gap: 100px;
-            min-height: 500px;
-            width: max-content;
-        }
+  .dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: #1c1810;
+    border: 1px solid rgba(200,149,42,0.35);
+    border-radius: 6px;
+    overflow: hidden;
+    display: none;
+    z-index: 200;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+  .dropdown.open { display: block; }
 
-        .column {
-            display: flex;
-            flex-direction: column;
-            gap: 40px;
-            z-index: 10;
-        }
+  .dd-item {
+    padding: 9px 14px;
+    font-size: 14px;
+    color: var(--parchment-dark);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(200,149,42,0.08);
+    transition: background 0.12s;
+  }
+  .dd-item:last-child { border-bottom: none; }
+  .dd-item:hover, .dd-item.active {
+    background: rgba(200,149,42,0.12);
+    color: var(--gold-light);
+  }
+  .dd-item .dd-die {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    padding: 2px 6px;
+    border: 1px solid rgba(200,149,42,0.3);
+    border-radius: 4px;
+    color: var(--gold-dim);
+    flex-shrink: 0;
+  }
 
-        /* Table Card Styles */
-        .table-card {
-            width: 320px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            border: 1px solid #e2e8f0;
-            overflow: hidden;
-            animation: slideIn 0.3s ease-out;
-        }
+  .clear-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid rgba(139,32,32,0.5);
+    border-radius: 5px;
+    color: var(--crimson-light);
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .clear-btn:hover {
+    background: rgba(139,32,32,0.15);
+    border-color: var(--crimson-light);
+    box-shadow: 0 0 12px rgba(139,32,32,0.2);
+  }
 
-        @keyframes slideIn { 
-            from { opacity: 0; transform: translateX(-30px); } 
-            to { opacity: 1; transform: translateX(0); } 
-        }
+  /* ── Canvas ── */
+  #canvas {
+    padding: 36px 24px 80px;
+    overflow-x: auto;
+    min-height: calc(100vh - 60px);
+  }
 
-        .card-header {
-            background: var(--primary);
-            color: white;
-            padding: 14px;
-            font-weight: 800;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 16px;
+    opacity: 0.45;
+  }
+  .empty-state .rune { font-size: 52px; line-height: 1; }
+  .empty-state p {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    color: var(--stone-light);
+    text-align: center;
+  }
 
-        .row {
-            display: flex;
-            padding: 10px 14px;
-            border-bottom: 1px solid #f1f5f9;
-            font-size: 14px;
-            transition: all 0.2s;
-            position: relative;
-        }
+  /* ── Mind-map flow ── */
+  #flow {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
 
-        .row.highlight {
-            background: #eef2ff;
-            border-left: 4px solid var(--primary);
-            font-weight: 600;
-        }
+  /* SVG connector layer */
+  #svg-connectors {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    overflow: visible;
+  }
 
-        .next-indicator {
-            position: absolute;
-            right: 10px;
-            font-size: 10px;
-            color: var(--accent);
-            text-transform: uppercase;
-        }
+  .connector-path {
+    fill: none;
+    stroke: url(#connGrad);
+    stroke-width: 1.5;
+    stroke-dasharray: 6 4;
+    animation: dash-flow 2s linear infinite;
+    opacity: 0.55;
+  }
+  @keyframes dash-flow { to { stroke-dashoffset: -20; } }
 
-        .col-roll { width: 35px; color: #94a3b8; font-family: monospace; }
-        .col-text { flex: 1; padding-right: 20px; }
+  /* ── Table Row ── */
+  .table-row-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    position: relative;
+    width: 100%;
+  }
 
-        .roll-btn-container { padding: 16px; background: #fafafa; }
-        .roll-btn {
-            width: 100%;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);
-        }
+  /* depth indent */
+  .table-row-wrap[data-depth="0"] { padding-left: 0; }
+  .table-row-wrap[data-depth="1"] { padding-left: 60px; }
+  .table-row-wrap[data-depth="2"] { padding-left: 120px; }
+  .table-row-wrap[data-depth="3"] { padding-left: 180px; }
+  .table-row-wrap[data-depth="4"] { padding-left: 240px; }
 
-        .roll-btn:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
+  /* ── Card ── */
+  .card {
+    background: linear-gradient(160deg, #2a2318 0%, #1e1a12 100%);
+    border: 1px solid rgba(200,149,42,0.22);
+    border-radius: 10px;
+    padding: 18px 20px;
+    width: clamp(300px, 420px, 90vw);
+    position: relative;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    margin: 16px 0;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(200,149,42,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    border-radius: inherit;
+  }
+  .card.active-roll {
+    border-color: rgba(200,149,42,0.55);
+    box-shadow: 0 0 0 1px rgba(200,149,42,0.12), 0 8px 32px rgba(0,0,0,0.4), 0 0 24px rgba(200,149,42,0.08);
+  }
+  .card.done {
+    border-color: rgba(200,149,42,0.12);
+    opacity: 0.75;
+  }
 
-        /* SVG Connections */
-        #svg-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-        }
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
 
-        line { stroke: var(--line); stroke-width: 3; stroke-linecap: round; }
-    </style>
+  .card-name {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gold-light);
+    letter-spacing: 0.05em;
+    line-height: 1.3;
+  }
+
+  .card-depth-badge {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    padding: 2px 8px;
+    background: rgba(200,149,42,0.1);
+    border: 1px solid rgba(200,149,42,0.2);
+    border-radius: 3px;
+    color: var(--gold-dim);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ── Die Entries Table ── */
+  .die-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+    font-size: 14px;
+  }
+  .die-table tr {
+    border-bottom: 1px solid rgba(200,149,42,0.08);
+    transition: background 0.15s;
+  }
+  .die-table tr:last-child { border-bottom: none; }
+  .die-table td {
+    padding: 5px 6px;
+    vertical-align: top;
+    line-height: 1.45;
+  }
+  .die-table td.roll-idx {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    color: var(--stone-light);
+    width: 28px;
+    padding-top: 7px;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+  .die-table td.roll-flavor {
+    color: rgba(240,232,210,0.8);
+    font-style: italic;
+  }
+
+  /* Highlighted (rolled) row */
+  .die-table tr.rolled {
+    background: rgba(200,149,42,0.1);
+    border-radius: 4px;
+  }
+  .die-table tr.rolled td.roll-idx {
+    color: var(--gold);
+    font-weight: 600;
+  }
+  .die-table tr.rolled td.roll-flavor {
+    color: var(--parchment);
+    font-style: normal;
+    font-weight: 400;
+  }
+
+  /* ── Roll button ── */
+  .roll-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    padding: 9px 20px;
+    background: linear-gradient(135deg, rgba(200,149,42,0.18) 0%, rgba(160,120,32,0.1) 100%);
+    border: 1px solid rgba(200,149,42,0.45);
+    border-radius: 5px;
+    color: var(--gold-light);
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    justify-content: center;
+    text-transform: uppercase;
+  }
+  .roll-btn:hover {
+    background: linear-gradient(135deg, rgba(200,149,42,0.3) 0%, rgba(160,120,32,0.2) 100%);
+    border-color: var(--gold);
+    box-shadow: 0 0 16px rgba(200,149,42,0.18);
+    transform: translateY(-1px);
+  }
+  .roll-btn:active { transform: translateY(0) scale(0.98); }
+  .roll-btn .die-icon { font-size: 16px; }
+
+  .rolled-result {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 7px 10px;
+    background: rgba(200,149,42,0.08);
+    border-radius: 5px;
+    border: 1px solid rgba(200,149,42,0.18);
+  }
+  .rolled-result .result-num {
+    font-family: 'Cinzel', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--gold);
+    line-height: 1;
+    min-width: 28px;
+    text-align: center;
+  }
+  .rolled-result .result-label {
+    font-size: 12px;
+    color: var(--stone-light);
+    line-height: 1.3;
+  }
+  .rolled-result .result-label strong {
+    display: block;
+    color: var(--parchment);
+    font-size: 13px;
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  /* ── Die roll animation ── */
+  @keyframes die-shake {
+    0%   { transform: rotate(0deg) scale(1); }
+    20%  { transform: rotate(-8deg) scale(1.15); }
+    40%  { transform: rotate(10deg) scale(1.1); }
+    60%  { transform: rotate(-6deg) scale(1.12); }
+    80%  { transform: rotate(5deg) scale(1.08); }
+    100% { transform: rotate(0deg) scale(1); }
+  }
+  .die-rolling { animation: die-shake 0.45s ease; }
+
+  /* ── Card entrance ── */
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(18px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .card-animate { animation: card-in 0.4s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+  /* ── Connector node dot ── */
+  .node-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--gold);
+    border: 2px solid var(--ink);
+    box-shadow: 0 0 6px rgba(200,149,42,0.5);
+    flex-shrink: 0;
+    margin-top: 38px;
+  }
+
+  /* ── Next table hint ── */
+  .next-hint {
+    font-size: 12px;
+    color: var(--stone-light);
+    font-style: italic;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(200,149,42,0.1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .next-hint .arrow { color: var(--gold-dim); }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(200,149,42,0.25); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(200,149,42,0.45); }
+</style>
 </head>
 <body>
 
-<div class="toolbar">
-    <div class="search-container">
-        <input type="text" id="tableSearch" placeholder="Search tables..." oninput="filterTables()" autocomplete="off">
-        <div id="dropdown" class="dropdown-list"></div>
-    </div>
-    <button class="btn-clear" onclick="clearAll()">Clear Canvas</button>
-</div>
+<!-- Header -->
+<header class="header">
+  <div class="header-title">&#9670; Roll Table <span>Explorer</span></div>
 
-<div id="map-wrapper">
-    <div id="map-container">
-        <svg id="svg-canvas"></svg>
-        </div>
+  <div class="search-container">
+    <span class="search-icon">&#9654;</span>
+    <input type="text" id="search-input" placeholder="Search tables…" autocomplete="off" spellcheck="false"/>
+    <div class="dropdown" id="dropdown"></div>
+  </div>
+
+  <button class="clear-btn" onclick="clearAll()">&#10005; Clear Tables</button>
+</header>
+
+<!-- Main canvas -->
+<div id="canvas">
+  <div class="empty-state" id="empty-state">
+    <div class="rune">&#9670;</div>
+    <p>Search for a table above to begin your fate</p>
+  </div>
+
+  <div id="flow" style="display:none;">
+    <svg id="svg-connectors" aria-hidden="true">
+      <defs>
+        <linearGradient id="connGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#c8952a" stop-opacity="0.7"/>
+          <stop offset="100%" stop-color="#c8952a" stop-opacity="0.2"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
 </div>
 
 <script>
-    // --- DATABASE ---
-    const rollTables = {
-        "Dungeon Entrance": {
-            name: "Dungeon Entrance",
-            rollType: "1d6",
-            rows: [
-                { val: 1, text: "Iron Portcullis (Locked)", next: "Trap Table" },
-                { val: 2, text: "Cave-in: Blocked Path", next: "Skill Check" },
-                { val: 3, text: "Grumbling Goblins", next: "Combat: Goblins" },
-                { val: 4, text: "A Mysterious Statue", next: "Statue Interaction" },
-                { val: 5, text: "Hidden Doorway", next: "Treasure Room" },
-                { val: 6, text: "Fresh Tracks", next: "Tracking Result" }
-            ]
-        },
-        "Trap Table": {
-            name: "Trap Table",
-            rollType: "1d4",
-            rows: [
-                { val: 1, text: "Poison Needle (1d4 Dmg)" },
-                { val: 2, text: "Falling Rocks", next: "Skill Check" },
-                { val: 3, text: "Alarm Sounds", next: "Combat: Goblins" },
-                { val: 4, text: "Nothing happens" }
-            ]
-        },
-        "Combat: Goblins": {
-            name: "Combat: Goblins",
-            rollType: "2d6",
-            rows: [
-                { val: 2, text: "Critical Defeat", next: "Death Table" },
-                { val: 7, text: "Victory: Messy", next: "Loot Table" },
-                { val: 12, text: "Victory: Flawless", next: "Loot Table" }
-            ]
-        },
-        "Loot Table": {
-            name: "Loot Table",
-            rollType: "1d6",
-            rows: [
-                { val: 1, text: "Broken Sword" },
-                { val: 3, text: "10 Gold Coins" },
-                { val: 6, text: "Magic Scroll", next: "Statue Interaction" }
-            ]
-        },
-        "Skill Check": {
-            name: "Skill Check",
-            rollType: "1d20",
-            rows: [
-                { val: 1, text: "Epic Fail", next: "Trap Table" },
-                { val: 10, text: "Barely Success", next: "Dungeon Entrance" },
-                { val: 20, text: "Perfect Success", next: "Treasure Room" }
-            ]
-        },
-        "Treasure Room": {
-            name: "Treasure Room",
-            rollType: "1d100",
-            rows: [
-                { val: 1, text: "Mimic!" },
-                { val: 50, text: "Pile of Silver" },
-                { val: 100, text: "Ancient Artifact" }
-            ]
-        }
-    };
+/* ──────────────────────────────────────────────
+   DATA
+────────────────────────────────────────────── */
+const TABLES = {
+  "Weather": {
+    rollType: "1d6",
+    entries: [
+      { roll: 1, flavor: "Bright sunshine, clear skies — perfect travelling weather" },
+      { roll: 2, flavor: "Gentle breeze, partly cloudy overhead" },
+      { roll: 3, flavor: "Overcast and grey, the air feels heavy" },
+      { roll: 4, flavor: "Light rain begins to fall, the road grows muddy" },
+      { roll: 5, flavor: "Heavy downpour, visibility drops to a few feet" },
+      { roll: 6, flavor: "Violent storm, lightning strikes dangerously close" },
+    ],
+    next: { 4: "Minor Encounters", 5: "Storm Events", 6: "Storm Events" }
+  },
+  "Storm Events": {
+    rollType: "1d6",
+    entries: [
+      { roll: 1, flavor: "A great tree crashes across the road ahead" },
+      { roll: 2, flavor: "Flash flood sweeps through the valley below" },
+      { roll: 3, flavor: "Hailstones the size of fists begin to fall" },
+      { roll: 4, flavor: "Lightning strikes a building nearby — fire!" },
+      { roll: 5, flavor: "A funnel cloud forms on the horizon, spiralling down" },
+      { roll: 6, flavor: "A catastrophic tornado tears directly through your path" },
+    ],
+    next: { 3: "Damage", 4: "Damage", 5: "Damage", 6: "Damage" }
+  },
+  "Minor Encounters": {
+    rollType: "2d6",
+    entries: [
+      { roll: 2,  flavor: "A wild-eyed hermit offers cryptic, unsolicited advice" },
+      { roll: 3,  flavor: "A stray hound follows you for nearly a mile" },
+      { roll: 4,  flavor: "You find a coin half-buried in the roadside mud" },
+      { roll: 5,  flavor: "A merchant's wagon rolls past, heading south in haste" },
+      { roll: 6,  flavor: "Birdsong shifts suddenly — the forest goes silent" },
+      { roll: 7,  flavor: "You stumble on a fresh campfire, still warm and smouldering" },
+      { roll: 8,  flavor: "A distant horn sounds twice across the moorland" },
+      { roll: 9,  flavor: "Footprints in the mud lead off into the dark trees" },
+      { roll: 10, flavor: "A raven lands nearby and stares at you intently" },
+      { roll: 11, flavor: "You catch the scent of smoke and iron on the wind" },
+      { roll: 12, flavor: "Armed figures step from the shadows ahead of you" },
+    ],
+    next: { 11: "Combat", 12: "Combat" }
+  },
+  "Combat": {
+    rollType: "1d6",
+    entries: [
+      { roll: 1, flavor: "They hesitate — clearly underfed and desperate" },
+      { roll: 2, flavor: "One draws a rusted blade and advances slowly" },
+      { roll: 3, flavor: "They split apart, attempting to flank your position" },
+      { roll: 4, flavor: "An arrow whizzes past your ear, close" },
+      { roll: 5, flavor: "The leader is a seasoned swordsman — move carefully" },
+      { roll: 6, flavor: "A hidden archer joins the fray from the treeline" },
+    ],
+    next: { 4: "Loot", 5: "Loot", 6: "Loot" }
+  },
+  "Loot": {
+    rollType: "1d6",
+    entries: [
+      { roll: 1, flavor: "A handful of copper coins, still warm from their pockets" },
+      { roll: 2, flavor: "A torn map with a red X marked somewhere north" },
+      { roll: 3, flavor: "A silver ring engraved with a snarling wolf" },
+      { roll: 4, flavor: "Three vials of unknown crimson liquid" },
+      { roll: 5, flavor: "A perfectly cut gem worth 50 gold pieces" },
+      { roll: 6, flavor: "A finely balanced dagger, humming faintly with magic" },
+    ],
+    next: {}
+  },
+  "Damage": {
+    rollType: "1d6",
+    entries: [
+      { roll: 1, flavor: "Minor scrapes — stings but you'll survive" },
+      { roll: 2, flavor: "Bruised ribs, each breath is a fresh reminder" },
+      { roll: 3, flavor: "Twisted ankle, your pace drops to a hobble" },
+      { roll: 4, flavor: "A blow to the head leaves you seeing double" },
+      { roll: 5, flavor: "A deep gash opens and you begin to bleed freely" },
+      { roll: 6, flavor: "You drop — unconscious and at death's door" },
+    ],
+    next: {}
+  },
+  "Dungeon Room": {
+    rollType: "1d6",
+    entries: [
+      { roll: 1, flavor: "An empty chamber — dust thick on every surface" },
+      { roll: 2, flavor: "A collapsed passage blocks half the room" },
+      { roll: 3, flavor: "Faded murals depict some long-forgotten siege" },
+      { roll: 4, flavor: "A locked iron chest squats in the very centre" },
+      { roll: 5, flavor: "Scattered bones — something large was eaten here recently" },
+      { roll: 6, flavor: "A shrine pulses with faint, cold magical light" },
+    ],
+    next: { 4: "Loot", 5: "Monster Den", 6: "Magical Effects" }
+  },
+  "Monster Den": {
+    rollType: "2d6",
+    entries: [
+      { roll: 2,  flavor: "A nest of giant rats — dozens of red eyes glint" },
+      { roll: 3,  flavor: "A single enormous spider drops silently from above" },
+      { roll: 4,  flavor: "Goblin scouts, arguing over a half-eaten carcass" },
+      { roll: 5,  flavor: "A wounded wolf, cornered and snarling" },
+      { roll: 6,  flavor: "Skeleton warriors, still in rusted armour" },
+      { roll: 7,  flavor: "A sleeping ogre — its snoring shakes the walls" },
+      { roll: 8,  flavor: "A gelatinous cube, silently dissolving everything in its path" },
+      { roll: 9,  flavor: "Hobgoblins drilling in formation, disciplined and ready" },
+      { roll: 10, flavor: "A basilisk, its gaze sweeping the room lazily" },
+      { roll: 11, flavor: "A young dragon, restless and hungry for gold" },
+      { roll: 12, flavor: "An ancient lich floats above a pile of skulls" },
+    ],
+    next: { 10: "Combat", 11: "Combat", 12: "Combat" }
+  },
+  "Magical Effects": {
+    rollType: "1d6",
+    entries: [
+      { roll: 1, flavor: "Harmless sparks shower from the ceiling for a moment" },
+      { roll: 2, flavor: "All sound within the room goes completely muffled" },
+      { roll: 3, flavor: "You feel an overwhelming urge to dance — and do so" },
+      { roll: 4, flavor: "Your hair and eyebrows vanish — painlessly, for now" },
+      { roll: 5, flavor: "A duplicate of you appears and mimics every action" },
+      { roll: 6, flavor: "Wildfire magic erupts — everyone rolls for 3d6 damage" },
+    ],
+    next: { 5: "Minor Encounters", 6: "Damage" }
+  },
+  "Tavern Events": {
+    rollType: "2d6",
+    entries: [
+      { roll: 2,  flavor: "The barmaid spills ale on a dangerous-looking stranger" },
+      { roll: 3,  flavor: "A bard begins a lewd song about local nobility" },
+      { roll: 4,  flavor: "Two drunken dwarves begin to arm-wrestle for gold" },
+      { roll: 5,  flavor: "A hooded figure slides you a folded note" },
+      { roll: 6,  flavor: "The fire roars up suddenly, casting wild shadows" },
+      { roll: 7,  flavor: "A travelling merchant offers something rare under the table" },
+      { roll: 8,  flavor: "A fight breaks out in the corner with chairs and bottles" },
+      { roll: 9,  flavor: "Someone recognises you — and they don't look pleased" },
+      { roll: 10, flavor: "A wealthy patron announces he's buying a round for all" },
+      { roll: 11, flavor: "Guards burst through the door — someone here is wanted" },
+      { roll: 12, flavor: "The innkeeper is found stabbed in the back cellar" },
+    ],
+    next: { 5: "Minor Encounters", 8: "Combat", 11: "Combat", 12: "Combat" }
+  }
+};
 
-    function filterTables() {
-        const input = document.getElementById('tableSearch');
-        const list = document.getElementById('dropdown');
-        const filter = input.value.toLowerCase();
-        
-        list.innerHTML = '';
-        if (!filter) { list.style.display = 'none'; return; }
+/* ──────────────────────────────────────────────
+   STATE
+────────────────────────────────────────────── */
+let tableChain = []; // [{tableName, cardEl, result, depth}]
 
-        const matches = Object.keys(rollTables).filter(key => key.toLowerCase().includes(filter));
-        matches.forEach(name => {
-            const div = document.createElement('div');
-            div.className = 'dropdown-item';
-            div.innerText = name;
-            div.onclick = () => selectStartTable(name);
-            list.appendChild(div);
-        });
-        list.style.display = matches.length ? 'block' : 'none';
-    }
+/* ──────────────────────────────────────────────
+   SEARCH / DROPDOWN
+────────────────────────────────────────────── */
+const searchInput = document.getElementById('search-input');
+const dropdown    = document.getElementById('dropdown');
+const tableNames  = Object.keys(TABLES);
+let ddActiveIdx   = -1;
+let ddFiltered    = [];
 
-    function selectStartTable(name) {
-        clearAll();
-        document.getElementById('dropdown').style.display = 'none';
-        document.getElementById('tableSearch').value = name;
-        addTableToUI(name, 0);
-    }
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim().toLowerCase();
+  ddFiltered = q ? tableNames.filter(n => n.toLowerCase().includes(q)) : tableNames;
+  renderDropdown();
+});
 
-    function addTableToUI(tableName, depth, parentCardId = null) {
-        const tableData = rollTables[tableName];
-        if (!tableData) return;
+searchInput.addEventListener('focus', () => {
+  const q = searchInput.value.trim().toLowerCase();
+  ddFiltered = q ? tableNames.filter(n => n.toLowerCase().includes(q)) : tableNames;
+  renderDropdown();
+});
 
-        let container = document.getElementById('map-container');
-        let columns = container.getElementsByClassName('column');
-        
-        // Ensure column exists
-        while (columns.length <= depth) {
-            const newCol = document.createElement('div');
-            newCol.className = 'column';
-            container.appendChild(newCol);
-        }
+searchInput.addEventListener('keydown', e => {
+  if (!dropdown.classList.contains('open')) return;
+  if (e.key === 'ArrowDown') { ddActiveIdx = Math.min(ddActiveIdx+1, ddFiltered.length-1); updateDDActive(); e.preventDefault(); }
+  else if (e.key === 'ArrowUp') { ddActiveIdx = Math.max(ddActiveIdx-1, 0); updateDDActive(); e.preventDefault(); }
+  else if (e.key === 'Enter') { if (ddActiveIdx >= 0) selectTable(ddFiltered[ddActiveIdx]); e.preventDefault(); }
+  else if (e.key === 'Escape') { closeDropdown(); }
+});
 
-        const cardId = `card-${depth}-${Math.random().toString(36).substr(2, 9)}`;
-        const card = document.createElement('div');
-        card.className = 'table-card';
-        card.id = cardId;
-        
-        const rowsHtml = tableData.rows.map(r => `
-            <div class="row" data-val="${r.val}" data-next="${r.next || ''}">
-                <div class="col-roll">${r.val}</div>
-                <div class="col-text">${r.text}</div>
-                ${r.next ? '<span class="next-indicator">➔</span>' : ''}
-            </div>
-        `).join('');
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-container')) closeDropdown();
+});
 
-        card.innerHTML = `
-            <div class="card-header">
-                <span>${tableData.name}</span>
-                <small>${tableData.rollType}</small>
-            </div>
-            <div class="card-content">${rowsHtml}</div>
-            <div class="roll-btn-container">
-                <button class="roll-btn" onclick="roll('${tableName}', '${cardId}', ${depth})">
-                    Roll ${tableData.rollType}
-                </button>
-            </div>
-        `;
+function renderDropdown() {
+  ddActiveIdx = -1;
+  if (!ddFiltered.length) { closeDropdown(); return; }
+  dropdown.innerHTML = ddFiltered.map((name, i) => {
+    const t = TABLES[name];
+    return `<div class="dd-item" data-i="${i}" onclick="selectTable('${name.replace(/'/g,"\\'")}')">
+      <span class="dd-die">${t.rollType}</span>
+      <span>${name}</span>
+    </div>`;
+  }).join('');
+  dropdown.classList.add('open');
+}
 
-        columns[depth].appendChild(card);
-        
-        // Connect with line after card is placed
-        if (parentCardId) {
-            setTimeout(() => drawLine(parentCardId, cardId), 50);
-        }
-    }
+function updateDDActive() {
+  dropdown.querySelectorAll('.dd-item').forEach((el, i) => {
+    el.classList.toggle('active', i === ddActiveIdx);
+    if (i === ddActiveIdx) el.scrollIntoView({ block: 'nearest' });
+  });
+}
 
-    function roll(tableName, cardId, depth) {
-        const tableData = rollTables[tableName];
-        const [num, sides] = tableData.rollType.split('d').map(Number);
-        
-        let result = 0;
-        for(let i=0; i<num; i++) result += Math.floor(Math.random() * sides) + 1;
+function closeDropdown() {
+  dropdown.classList.remove('open');
+  ddActiveIdx = -1;
+}
 
-        const card = document.getElementById(cardId);
-        const rowEls = Array.from(card.querySelectorAll('.row'));
-        
-        // Find the best match (closest value without going over, or exact)
-        let matchedRow = tableData.rows.find(r => r.val === result) || 
-                         tableData.rows.reduce((prev, curr) => (Math.abs(curr.val - result) < Math.abs(prev.val - result) ? curr : prev));
+/* ──────────────────────────────────────────────
+   SELECT TABLE (first card)
+────────────────────────────────────────────── */
+function selectTable(name) {
+  closeDropdown();
+  searchInput.value = '';
 
-        // UI Update
-        rowEls.forEach(el => {
-            el.classList.remove('highlight');
-            if(parseInt(el.dataset.val) === matchedRow.val) el.classList.add('highlight');
-        });
+  // Clear existing
+  clearAll(false);
 
-        card.querySelector('.roll-btn').disabled = true;
+  // Show flow
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('flow').style.display = 'block';
 
-        // Trigger next table
-        if (matchedRow.next) {
-            addTableToUI(matchedRow.next, depth + 1, cardId);
-        }
-    }
+  addCard(name, 0);
+}
 
-    function drawLine(startId, endId) {
-        const start = document.getElementById(startId);
-        const end = document.getElementById(endId);
-        const svg = document.getElementById('svg-canvas');
-        const container = document.getElementById('map-container');
+/* ──────────────────────────────────────────────
+   ADD CARD
+────────────────────────────────────────────── */
+function addCard(tableName, depth) {
+  const table = TABLES[tableName];
+  if (!table) return;
 
-        const sRect = start.getBoundingClientRect();
-        const eRect = end.getBoundingClientRect();
-        const cRect = container.getBoundingClientRect();
+  const flow = document.getElementById('flow');
 
-        const x1 = sRect.right - cRect.left;
-        const y1 = sRect.top + (sRect.height / 2) - cRect.top;
-        const x2 = eRect.left - cRect.left;
-        const y2 = eRect.top + (eRect.height / 2) - cRect.top;
+  const rowWrap = document.createElement('div');
+  rowWrap.className = 'table-row-wrap';
+  rowWrap.setAttribute('data-depth', Math.min(depth, 4));
 
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", x1);
-        line.setAttribute("y1", y1);
-        line.setAttribute("x2", x2);
-        line.setAttribute("y2", y2);
-        svg.appendChild(line);
-    }
+  // Node dot for depth > 0
+  if (depth > 0) {
+    const dot = document.createElement('div');
+    dot.className = 'node-dot';
+    rowWrap.appendChild(dot);
+  }
 
-    function clearAll() {
-        const container = document.getElementById('map-container');
-        container.innerHTML = '<svg id="svg-canvas"></svg>';
-        document.getElementById('tableSearch').value = '';
-    }
+  const card = document.createElement('div');
+  card.className = 'card active-roll card-animate';
+  card.setAttribute('data-table', tableName);
+  card.setAttribute('data-depth', depth);
+
+  const dieIcon = getDieIcon(table.rollType);
+
+  card.innerHTML = `
+    <div class="card-header">
+      <div class="card-name">${tableName}</div>
+      <div class="card-depth-badge">${table.rollType}</div>
+    </div>
+    <table class="die-table" id="dt-${depth}-${Date.now()}">
+      <tbody>
+        ${table.entries.map(e => `
+          <tr data-roll="${e.roll}">
+            <td class="roll-idx">${e.roll}</td>
+            <td class="roll-flavor">${e.flavor}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    <div id="result-area-${depth}-${Date.now()}" class="result-area"></div>
+    <button class="roll-btn" onclick="doRoll(this)">
+      <span class="die-icon">${dieIcon}</span> Roll ${table.rollType}
+    </button>
+  `;
+
+  card._tableName = tableName;
+  card._depth     = depth;
+  card._table     = table;
+
+  rowWrap.appendChild(card);
+  flow.appendChild(rowWrap);
+
+  tableChain.push({ tableName, cardEl: card, result: null, depth });
+
+  // Draw connector from previous card
+  if (tableChain.length > 1) {
+    setTimeout(() => drawConnector(tableChain.length - 2, tableChain.length - 1), 80);
+  }
+
+  // Scroll into view
+  setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
+}
+
+/* ──────────────────────────────────────────────
+   ROLL LOGIC
+────────────────────────────────────────────── */
+function doRoll(btn) {
+  const card = btn.closest('.card');
+  const table = card._table;
+  const depth = card._depth;
+
+  // Animate die icon
+  const icon = btn.querySelector('.die-icon');
+  icon.classList.remove('die-rolling');
+  void icon.offsetWidth;
+  icon.classList.add('die-rolling');
+
+  // Simulate roll
+  const rollVal = simulateRoll(table.rollType);
+  const entry   = table.entries.find(e => e.roll === rollVal)
+                || table.entries[table.entries.length - 1];
+
+  // Highlight row
+  const rows = card.querySelectorAll('.die-table tr');
+  rows.forEach(r => r.classList.remove('rolled'));
+  const targetRow = card.querySelector(`.die-table tr[data-roll="${entry.roll}"]`);
+  if (targetRow) targetRow.classList.add('rolled');
+
+  // Show result summary
+  const resultAreaId = card.querySelector('.result-area').id;
+  const resultArea = card.querySelector('.result-area');
+  resultArea.innerHTML = `
+    <div class="rolled-result">
+      <span class="result-num">${rollVal}</span>
+      <span class="result-label">
+        You rolled<strong>${entry.flavor}</strong>
+      </span>
+    </div>
+  `;
+
+  // Disable roll button
+  btn.disabled = true;
+  btn.style.opacity = '0.45';
+  btn.style.cursor = 'not-allowed';
+
+  // Mark card done
+  card.classList.remove('active-roll');
+  card.classList.add('done');
+
+  // Determine next table
+  const nextName = table.next?.[rollVal];
+  if (nextName && TABLES[nextName]) {
+    // Show next hint
+    const hint = document.createElement('div');
+    hint.className = 'next-hint';
+    hint.innerHTML = `<span class="arrow">&#8594;</span> Chains to: <strong style="color:var(--gold-dim)">${nextName}</strong>`;
+    card.appendChild(hint);
+
+    // Store result
+    const chainItem = tableChain.find(c => c.cardEl === card);
+    if (chainItem) chainItem.result = rollVal;
+
+    setTimeout(() => addCard(nextName, depth + 1), 380);
+  } else {
+    const chainItem = tableChain.find(c => c.cardEl === card);
+    if (chainItem) chainItem.result = rollVal;
+
+    const endHint = document.createElement('div');
+    endHint.className = 'next-hint';
+    endHint.innerHTML = `<span style="color:var(--emerald-light)">&#10003;</span> End of chain — press Clear to reset`;
+    card.appendChild(endHint);
+  }
+}
+
+function simulateRoll(rollType) {
+  const m = rollType.match(/^(\d+)d(\d+)$/i);
+  if (!m) return 1;
+  const numDice = parseInt(m[1]);
+  const sides   = parseInt(m[2]);
+  let total = 0;
+  for (let i = 0; i < numDice; i++) {
+    total += Math.floor(Math.random() * sides) + 1;
+  }
+  return total;
+}
+
+function getDieIcon(rollType) {
+  if (rollType.includes('d20')) return '⬡';
+  if (rollType.includes('d12')) return '⬠';
+  if (rollType.includes('d10')) return '⬟';
+  if (rollType.includes('d8'))  return '◇';
+  if (rollType.includes('d6'))  return '⬡';
+  if (rollType.includes('d4'))  return '△';
+  return '◈';
+}
+
+/* ──────────────────────────────────────────────
+   SVG CONNECTORS
+────────────────────────────────────────────── */
+function drawConnector(fromIdx, toIdx) {
+  const fromCard = tableChain[fromIdx]?.cardEl;
+  const toCard   = tableChain[toIdx]?.cardEl;
+  if (!fromCard || !toCard) return;
+
+  const svg     = document.getElementById('svg-connectors');
+  const flow    = document.getElementById('flow');
+  const flowRect = flow.getBoundingClientRect();
+
+  const fromRect = fromCard.getBoundingClientRect();
+  const toRect   = toCard.getBoundingClientRect();
+
+  const sx = fromRect.left - flowRect.left + fromRect.width * 0.5;
+  const sy = fromRect.bottom - flowRect.top;
+  const ex = toRect.left - flowRect.left + toRect.width * 0.5;
+  const ey = toRect.top - flowRect.top;
+
+  const mx1 = sx;
+  const my1 = sy + (ey - sy) * 0.4;
+  const mx2 = ex;
+  const my2 = sy + (ey - sy) * 0.6;
+
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', `M ${sx} ${sy} C ${mx1} ${my1}, ${mx2} ${my2}, ${ex} ${ey}`);
+  path.classList.add('connector-path');
+  svg.appendChild(path);
+
+  // Update SVG size
+  const totalH = flow.scrollHeight;
+  svg.setAttribute('height', totalH);
+}
+
+/* ──────────────────────────────────────────────
+   CLEAR
+────────────────────────────────────────────── */
+function clearAll(showEmpty = true) {
+  const flow = document.getElementById('flow');
+
+  // Remove all cards/rows except the SVG
+  const rows = flow.querySelectorAll('.table-row-wrap');
+  rows.forEach(r => r.remove());
+
+  // Clear connectors
+  const svg = document.getElementById('svg-connectors');
+  while (svg.lastChild && svg.lastChild.tagName !== 'defs') {
+    svg.removeChild(svg.lastChild);
+  }
+  // Clear all paths
+  svg.querySelectorAll('path.connector-path').forEach(p => p.remove());
+
+  tableChain = [];
+
+  if (showEmpty) {
+    document.getElementById('empty-state').style.display = '';
+    document.getElementById('flow').style.display = 'none';
+  }
+}
 </script>
-
 </body>
 </html>
