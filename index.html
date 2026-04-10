@@ -56,7 +56,7 @@
 
   .header-title {
     font-family: 'Cinzel', serif;
-    font-size: 17px;
+    font-size: 19px;
     font-weight: 600;
     letter-spacing: 0.08em;
     color: var(--gold);
@@ -89,7 +89,7 @@
   #search-input {
     width: 100%;
     font-family: 'Crimson Pro', serif;
-    font-size: 15px;
+    font-size: 16px;
     padding: 9px 12px 9px 34px;
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(200,149,42,0.25);
@@ -121,7 +121,7 @@
 
   .dd-item {
     padding: 9px 14px;
-    font-size: 14px;
+    font-size: 15px;
     color: var(--parchment-dark);
     cursor: pointer;
     display: flex;
@@ -273,7 +273,7 @@
 
   .card-name {
     font-family: 'Cinzel', serif;
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 600;
     color: var(--gold-light);
     letter-spacing: 0.05em;
@@ -297,7 +297,7 @@
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 14px;
-    font-size: 14px;
+    font-size: 15px;
   }
   .die-table tr {
     border-bottom: 1px solid rgba(200,149,42,0.08);
@@ -311,7 +311,7 @@
   }
   .die-table td.roll-idx {
     font-family: 'Cinzel', serif;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--stone-light);
     width: 28px;
     padding-top: 7px;
@@ -341,7 +341,7 @@
   /* ── Roll button ── */
   .roll-btn {
     font-family: 'Cinzel', serif;
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 0.1em;
     padding: 9px 20px;
     background: linear-gradient(135deg, rgba(200,149,42,0.18) 0%, rgba(160,120,32,0.1) 100%);
@@ -386,14 +386,14 @@
     text-align: center;
   }
   .rolled-result .result-label {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--stone-light);
     line-height: 1.3;
   }
   .rolled-result .result-label strong {
     display: block;
     color: var(--parchment);
-    font-size: 13px;
+    font-size: 15px;
     font-style: italic;
     font-weight: 400;
   }
@@ -429,7 +429,7 @@
 
   /* ── Next table hint ── */
   .next-hint {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--stone-light);
     font-style: italic;
     margin-top: 10px;
@@ -446,6 +446,103 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(200,149,42,0.25); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(200,149,42,0.45); }
+
+  /* ── Restart-this-table button ── */
+  .restart-btn {
+    background: transparent;
+    border: 1px solid rgba(200,149,42,0.2);
+    border-radius: 5px;
+    color: var(--gold-dim);
+    cursor: pointer;
+    padding: 4px 7px;
+    font-size: 14px;
+    line-height: 1;
+    transition: all 0.18s;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .restart-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold-light);
+    background: rgba(200,149,42,0.1);
+  }
+  .restart-btn:hover .restart-tooltip { opacity: 1; pointer-events: auto; }
+
+  .restart-tooltip {
+    position: absolute;
+    bottom: calc(100% + 7px);
+    right: 0;
+    background: #0f0d09;
+    border: 1px solid rgba(200,149,42,0.35);
+    border-radius: 6px;
+    padding: 7px 11px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 13px;
+    color: var(--parchment-dark);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    z-index: 50;
+  }
+  .restart-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    right: 10px;
+    border: 5px solid transparent;
+    border-top-color: rgba(200,149,42,0.35);
+  }
+
+  /* ── Manual roll input area ── */
+  .manual-roll-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .manual-roll-label {
+    font-size: 13px;
+    color: var(--stone-light);
+    font-style: italic;
+    white-space: nowrap;
+  }
+  .manual-roll-input {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    width: 62px;
+    padding: 5px 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(200,149,42,0.25);
+    border-radius: 5px;
+    color: var(--gold-light);
+    outline: none;
+    text-align: center;
+    transition: border-color 0.18s;
+  }
+  .manual-roll-input:focus { border-color: rgba(200,149,42,0.6); }
+  .manual-roll-input::-webkit-inner-spin-button,
+  .manual-roll-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  .manual-submit-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    padding: 5px 12px;
+    background: transparent;
+    border: 1px solid rgba(200,149,42,0.3);
+    border-radius: 5px;
+    color: var(--gold-dim);
+    cursor: pointer;
+    transition: all 0.16s;
+    white-space: nowrap;
+  }
+  .manual-submit-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold-light);
+    background: rgba(200,149,42,0.1);
+  }
 </style>
 </head>
 <body>
@@ -734,7 +831,13 @@ function addCard(tableName, depth) {
   card.innerHTML = `
     <div class="card-header">
       <div class="card-name">${tableName}</div>
-      <div class="card-depth-badge">${table.rollType}</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <div class="card-depth-badge">${table.rollType}</div>
+        <button class="restart-btn" onclick="restartFromCard(this)" aria-label="Restart from this table">
+          &#x21BA;
+          <span class="restart-tooltip">Clear all tables and restart fresh<br>using <em>${tableName}</em> as the starting table.</span>
+        </button>
+      </div>
     </div>
     <table class="die-table" id="dt-${depth}-${Date.now()}">
       <tbody>
@@ -745,10 +848,15 @@ function addCard(tableName, depth) {
           </tr>`).join('')}
       </tbody>
     </table>
-    <div id="result-area-${depth}-${Date.now()}" class="result-area"></div>
+    <div class="result-area"></div>
     <button class="roll-btn" onclick="doRoll(this)">
       <span class="die-icon">${dieIcon}</span> Roll ${table.rollType}
     </button>
+    <div class="manual-roll-area">
+      <span class="manual-roll-label">or enter your roll:</span>
+      <input class="manual-roll-input" type="number" min="${table.entries[0].roll}" max="${table.entries[table.entries.length-1].roll}" placeholder="–" />
+      <button class="manual-submit-btn" onclick="doManualRoll(this)">Apply</button>
+    </div>
   `;
 
   card._tableName = tableName;
@@ -757,6 +865,12 @@ function addCard(tableName, depth) {
 
   rowWrap.appendChild(card);
   flow.appendChild(rowWrap);
+
+  // Wire Enter key on manual input
+  const manualInput = card.querySelector('.manual-roll-input');
+  manualInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') card.querySelector('.manual-submit-btn').click();
+  });
 
   tableChain.push({ tableName, cardEl: card, result: null, depth });
 
@@ -775,7 +889,6 @@ function addCard(tableName, depth) {
 function doRoll(btn) {
   const card = btn.closest('.card');
   const table = card._table;
-  const depth = card._depth;
 
   // Animate die icon
   const icon = btn.querySelector('.die-icon');
@@ -783,19 +896,45 @@ function doRoll(btn) {
   void icon.offsetWidth;
   icon.classList.add('die-rolling');
 
-  // Simulate roll
   const rollVal = simulateRoll(table.rollType);
-  const entry   = table.entries.find(e => e.roll === rollVal)
-                || table.entries[table.entries.length - 1];
+  resolveRoll(card, rollVal);
+}
+
+function doManualRoll(btn) {
+  const card = btn.closest('.card');
+  const table = card._table;
+  const input = card.querySelector('.manual-roll-input');
+  const raw = parseInt(input.value, 10);
+
+  const minRoll = table.entries[0].roll;
+  const maxRoll = table.entries[table.entries.length - 1].roll;
+
+  if (isNaN(raw) || raw < minRoll || raw > maxRoll) {
+    input.style.borderColor = 'rgba(193,48,48,0.7)';
+    input.focus();
+    setTimeout(() => { input.style.borderColor = ''; }, 1200);
+    return;
+  }
+
+  resolveRoll(card, raw);
+}
+
+function resolveRoll(card, rollVal) {
+  const table = card._table;
+  const depth = card._depth;
+
+  const entry = table.entries.find(e => e.roll === rollVal)
+             || table.entries[table.entries.length - 1];
 
   // Highlight row
-  const rows = card.querySelectorAll('.die-table tr');
-  rows.forEach(r => r.classList.remove('rolled'));
+  card.querySelectorAll('.die-table tr').forEach(r => r.classList.remove('rolled'));
   const targetRow = card.querySelector(`.die-table tr[data-roll="${entry.roll}"]`);
-  if (targetRow) targetRow.classList.add('rolled');
+  if (targetRow) {
+    targetRow.classList.add('rolled');
+    targetRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
 
   // Show result summary
-  const resultAreaId = card.querySelector('.result-area').id;
   const resultArea = card.querySelector('.result-area');
   resultArea.innerHTML = `
     <div class="rolled-result">
@@ -806,10 +945,20 @@ function doRoll(btn) {
     </div>
   `;
 
-  // Disable roll button
-  btn.disabled = true;
-  btn.style.opacity = '0.45';
-  btn.style.cursor = 'not-allowed';
+  // Disable both roll controls
+  const rollBtn = card.querySelector('.roll-btn');
+  rollBtn.disabled = true;
+  rollBtn.style.opacity = '0.4';
+  rollBtn.style.cursor = 'not-allowed';
+
+  const manualArea = card.querySelector('.manual-roll-area');
+  if (manualArea) {
+    manualArea.querySelectorAll('input,button').forEach(el => {
+      el.disabled = true;
+      el.style.opacity = '0.4';
+      el.style.cursor = 'not-allowed';
+    });
+  }
 
   // Mark card done
   card.classList.remove('active-roll');
@@ -818,13 +967,11 @@ function doRoll(btn) {
   // Determine next table
   const nextName = table.next?.[rollVal];
   if (nextName && TABLES[nextName]) {
-    // Show next hint
     const hint = document.createElement('div');
     hint.className = 'next-hint';
     hint.innerHTML = `<span class="arrow">&#8594;</span> Chains to: <strong style="color:var(--gold-dim)">${nextName}</strong>`;
     card.appendChild(hint);
 
-    // Store result
     const chainItem = tableChain.find(c => c.cardEl === card);
     if (chainItem) chainItem.result = rollVal;
 
@@ -838,6 +985,15 @@ function doRoll(btn) {
     endHint.innerHTML = `<span style="color:var(--emerald-light)">&#10003;</span> End of chain — press Clear to reset`;
     card.appendChild(endHint);
   }
+}
+
+function restartFromCard(btn) {
+  const card = btn.closest('.card');
+  const tableName = card._tableName;
+  clearAll(false);
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('flow').style.display = 'block';
+  addCard(tableName, 0);
 }
 
 function simulateRoll(rollType) {
