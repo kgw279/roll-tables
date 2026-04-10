@@ -244,7 +244,7 @@
     position: relative;
     transition: border-color 0.3s, box-shadow 0.3s;
     margin: 16px 0;
-    overflow: hidden;
+    overflow: visible;
   }
   .card::before {
     content: '';
@@ -466,12 +466,9 @@
     color: var(--gold-light);
     background: rgba(200,149,42,0.1);
   }
-  .restart-btn:hover .restart-tooltip { opacity: 1; pointer-events: auto; }
 
   .restart-tooltip {
-    position: absolute;
-    bottom: calc(100% + 7px);
-    right: 0;
+    position: fixed;
     background: #0f0d09;
     border: 1px solid rgba(200,149,42,0.35);
     border-radius: 6px;
@@ -483,9 +480,10 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.15s;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-    z-index: 50;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    z-index: 9999;
   }
+  .restart-tooltip.visible { opacity: 1; }
   .restart-tooltip::after {
     content: '';
     position: absolute;
@@ -538,10 +536,112 @@
     transition: all 0.16s;
     white-space: nowrap;
   }
-  .manual-submit-btn:hover {
-    border-color: var(--gold);
+  /* ── Dice Roller Widget ── */
+  .dice-roller {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(200,149,42,0.2);
+    border-radius: 7px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .dice-roller select,
+  .dice-roller input[type="number"] {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(200,149,42,0.25);
+    border-radius: 4px;
     color: var(--gold-light);
+    outline: none;
+    padding: 4px 6px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .dice-roller select { width: 72px; text-align: center; }
+  .dice-roller input[type="number"] {
+    width: 46px;
+    text-align: center;
+    -moz-appearance: textfield;
+  }
+  .dice-roller input[type="number"]::-webkit-inner-spin-button,
+  .dice-roller input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .dice-roller select:focus,
+  .dice-roller input[type="number"]:focus { border-color: rgba(200,149,42,0.6); }
+
+  .dice-roller-x {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    color: var(--stone-light);
+  }
+
+  .dr-roll-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 0.07em;
+    padding: 5px 12px;
+    background: linear-gradient(135deg, rgba(200,149,42,0.2) 0%, rgba(160,120,32,0.1) 100%);
+    border: 1px solid rgba(200,149,42,0.4);
+    border-radius: 4px;
+    color: var(--gold-light);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .dr-roll-btn:hover {
+    background: linear-gradient(135deg, rgba(200,149,42,0.32) 0%, rgba(160,120,32,0.2) 100%);
+    border-color: var(--gold);
+    box-shadow: 0 0 10px rgba(200,149,42,0.15);
+  }
+  .dr-roll-btn:active { transform: scale(0.97); }
+
+  .dr-sep {
+    width: 1px;
+    height: 20px;
+    background: rgba(200,149,42,0.18);
+    flex-shrink: 0;
+  }
+
+  .dr-results {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .dr-die-pip {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: var(--parchment-dark);
     background: rgba(200,149,42,0.1);
+    border: 1px solid rgba(200,149,42,0.22);
+    border-radius: 4px;
+    padding: 2px 7px;
+    line-height: 1.4;
+    animation: pip-in 0.25s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @keyframes pip-in {
+    from { opacity: 0; transform: scale(0.7) translateY(-4px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .dr-sum {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gold);
+    padding-left: 2px;
+    white-space: nowrap;
+  }
+  .dr-results-empty {
+    font-family: 'Crimson Pro', serif;
+    font-size: 13px;
+    color: var(--stone-light);
+    font-style: italic;
   }
 </style>
 </head>
@@ -558,6 +658,28 @@
   </div>
 
   <button class="clear-btn" onclick="clearAll()">&#10005; Clear Tables</button>
+
+  <!-- Standalone dice roller -->
+  <div class="dice-roller" id="dice-roller">
+    <input type="number" id="dr-count" value="1" min="1" max="20" title="Number of dice"/>
+    <span class="dice-roller-x">×</span>
+    <select id="dr-type">
+      <option>d2</option>
+      <option>d3</option>
+      <option>d4</option>
+      <option selected>d6</option>
+      <option>d8</option>
+      <option>d10</option>
+      <option>d12</option>
+      <option>d20</option>
+      <option>d100</option>
+    </select>
+    <button class="dr-roll-btn" onclick="diceRollerRoll()">Roll</button>
+    <div class="dr-sep"></div>
+    <div class="dr-results" id="dr-results">
+      <span class="dr-results-empty">—</span>
+    </div>
+  </div>
 </header>
 
 <!-- Main canvas -->
@@ -1078,6 +1200,59 @@ function clearAll(showEmpty = true) {
     document.getElementById('flow').style.display = 'none';
   }
 }
+
+/* ──────────────────────────────────────────────
+   DICE ROLLER WIDGET
+────────────────────────────────────────────── */
+function diceRollerRoll() {
+  const count  = Math.max(1, Math.min(20, parseInt(document.getElementById('dr-count').value) || 1));
+  const dType  = document.getElementById('dr-type').value; // e.g. "d6"
+  const sides  = parseInt(dType.slice(1));
+  const rolls  = [];
+  for (let i = 0; i < count; i++) {
+    rolls.push(Math.floor(Math.random() * sides) + 1);
+  }
+  const sum = rolls.reduce((a, b) => a + b, 0);
+  const el  = document.getElementById('dr-results');
+
+  const pips = rolls.map((r, i) =>
+    `<span class="dr-die-pip" style="animation-delay:${i * 40}ms">${r}</span>`
+  ).join('');
+
+  const sumLabel = count > 1 ? `<span class="dr-sum">= ${sum}</span>` : '';
+  el.innerHTML = pips + sumLabel;
+}
+
+// Also allow Enter on the count input
+document.getElementById('dr-count').addEventListener('keydown', e => {
+  if (e.key === 'Enter') diceRollerRoll();
+});
+
+/* ──────────────────────────────────────────────
+   TOOLTIP POSITIONING (fixed, escapes overflow)
+────────────────────────────────────────────── */
+document.addEventListener('mouseover', e => {
+  const btn = e.target.closest('.restart-btn');
+  if (!btn) return;
+  const tip = btn.querySelector('.restart-tooltip');
+  if (!tip) return;
+  const rect = btn.getBoundingClientRect();
+  const tipW = tip.offsetWidth || 240;
+  let left = rect.right - tipW;
+  if (left < 8) left = 8;
+  tip.style.left = left + 'px';
+  // Show first (so offsetHeight is real), then position
+  tip.classList.add('visible');
+  const tipH = tip.offsetHeight || 46;
+  tip.style.top = (rect.top - tipH - 10) + 'px';
+});
+
+document.addEventListener('mouseout', e => {
+  const btn = e.target.closest('.restart-btn');
+  if (!btn) return;
+  const tip = btn.querySelector('.restart-tooltip');
+  if (tip) tip.classList.remove('visible');
+});
 </script>
 </body>
 </html>
